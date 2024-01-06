@@ -37,7 +37,6 @@ BEGIN
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
     BEGIN
         DECLARE error_message VARCHAR(255);
-        -- Get the error message
         GET DIAGNOSTICS CONDITION 1 error_message = MESSAGE_TEXT;
         ROLLBACK;
         INSERT INTO log_trx_api (user_id, api, request, response, insert_at)
@@ -47,19 +46,15 @@ BEGIN
 
     START TRANSACTION;
     
-    -- Insert data into the karyawan table
     INSERT INTO karyawan (nip, nama, alamat, gend, photo, tgl_lahir, status, insert_at, update_at, id)
     VALUES (p_nip, p_nama, p_alamat, p_gender, p_photo, p_tgl_lahir, p_status, p_insertat, p_updateat, 0);
 
-    -- Check if the insertion was successful
     IF ROW_COUNT() > 0 THEN
-        -- If successful, log the operation in log_trx_api
         INSERT INTO log_trx_api (user_id, api, request, response, insert_at)
         VALUES (1, '/insert', 'request', 'Successfully added employee data', NOW());
         COMMIT;
         SET p_result = 'Success';
     ELSE
-        -- If unsuccessful, log the operation in log_trx_api with an error message
         INSERT INTO log_trx_api (user_id, api, request, response, insert_at)
         VALUES (1, '/insert', 'request', 'Failed to add employee data', NOW());
         SET p_result = 'Failed to add employee data';
@@ -68,22 +63,20 @@ BEGIN
 
 END;
 
--- Declare variables to capture the output parameter
 SET @p_result = '';
 
--- Call the stored procedure
+
 CALL sp_add_kary_wisnu(
-    '20290003',   -- p_nip
-    'John Doe',   -- p_nama
-    'Jl. ABC',    -- p_alamat
-    'L',          -- p_gender
-    'photo_path', -- p_photo
-    '1990-01-01',  -- p_tgl_lahir
-    1,            -- p_status
-    '2021-11-05 15:49:36',   -- p_insertby
-    '2022-06-02 08:13:54',   -- p_updateby
-    @p_result     -- p_result (output parameter)
+    '20290003',   
+    'John Doe',  
+    'Jl. ABC',    
+    'L',          
+    'photo_path', 
+    '1990-01-01', 
+    1,           
+    '2021-11-05 15:49:36',   
+    '2022-06-02 08:13:54',   
+    @p_result     
 );
 
--- Display the result message
 SELECT @p_result AS result;
