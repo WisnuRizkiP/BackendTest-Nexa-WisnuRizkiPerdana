@@ -1,5 +1,5 @@
 
-# NEXA BACKEND TECHINCAL TEST
+# NEXA BACKEND TECHNICAL TEST
 
 This project is used to fulfill the technical test from NEXA Semarang, 
 and it utilizes the provided database credentials. 
