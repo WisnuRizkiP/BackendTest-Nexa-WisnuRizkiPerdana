@@ -1,0 +1,89 @@
+CREATE OR REPLACE
+ALGORITHM = UNDEFINED VIEW `karyawan_wisnu` AS
+select
+    (
+    select
+        count(0)
+    from
+        `karyawan` `k2`
+    where
+        (`k2`.`nip` <= `k`.`nip`)) AS `nomor`,
+    `k`.`nip` AS `nip`,
+    `k`.`nama` AS `nama`,
+    `k`.`alamat` AS `alamat`,
+    (case
+        when (`k`.`gend` = 'L') then 'Laki-laki'
+        when (`k`.`gend` = 'P') then 'Perempuan'
+    end) AS `gender`,
+    date_format(`k`.`tgl_lahir`, '%d %M %Y') AS `Tanggal Lahir`
+from
+    `karyawan` `k`;
+
+call karyawan_wisnu();
+
+CREATE PROCEDURE sp_add_kary_wisnu(
+    IN p_nip VARCHAR(255),
+    IN p_nama VARCHAR(255),
+    IN p_alamat VARCHAR(255),
+    IN p_gender CHAR(1),
+    IN p_photo VARCHAR(255),
+    IN p_tgl_lahir DATE,
+    IN p_status INT,
+    IN p_insertat VARCHAR(100),
+    IN p_updateat VARCHAR(100),
+    OUT p_result VARCHAR(255)
+)
+BEGIN
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        DECLARE error_message VARCHAR(255);
+        -- Get the error message
+        GET DIAGNOSTICS CONDITION 1 error_message = MESSAGE_TEXT;
+        ROLLBACK;
+        INSERT INTO log_trx_api (user_id, api, request, response, insert_at)
+        VALUES (1, '/insert', 'request', CONCAT('Failed to save due to error: ', error_message), NOW());
+        SET p_result = 'Failed to add employee data';
+    END;
+
+    START TRANSACTION;
+    
+    -- Insert data into the karyawan table
+    INSERT INTO karyawan (nip, nama, alamat, gend, photo, tgl_lahir, status, insert_at, update_at, id)
+    VALUES (p_nip, p_nama, p_alamat, p_gender, p_photo, p_tgl_lahir, p_status, p_insertat, p_updateat, 0);
+
+    -- Check if the insertion was successful
+    IF ROW_COUNT() > 0 THEN
+        -- If successful, log the operation in log_trx_api
+        INSERT INTO log_trx_api (user_id, api, request, response, insert_at)
+        VALUES (1, '/insert', 'request', 'Successfully added employee data', NOW());
+        COMMIT;
+        SET p_result = 'Success';
+    ELSE
+        -- If unsuccessful, log the operation in log_trx_api with an error message
+        INSERT INTO log_trx_api (user_id, api, request, response, insert_at)
+        VALUES (1, '/insert', 'request', 'Failed to add employee data', NOW());
+        SET p_result = 'Failed to add employee data';
+        ROLLBACK;
+    END IF;
+
+END;
+
+-- Declare variables to capture the output parameter
+SET @p_result = '';
+
+-- Call the stored procedure
+CALL sp_add_kary_wisnu(
+    '20290003',   -- p_nip
+    'John Doe',   -- p_nama
+    'Jl. ABC',    -- p_alamat
+    'L',          -- p_gender
+    'photo_path', -- p_photo
+    '1990-01-01',  -- p_tgl_lahir
+    1,            -- p_status
+    '2021-11-05 15:49:36',   -- p_insertby
+    '2022-06-02 08:13:54',   -- p_updateby
+    @p_result     -- p_result (output parameter)
+);
+
+-- Display the result message
+SELECT @p_result AS result;

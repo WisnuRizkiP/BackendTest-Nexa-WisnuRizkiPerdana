@@ -27,7 +27,6 @@ const CreateKaryawan = async (req,res) => {
             tgl_lahir
         } = req.body
         const generateNip = await generateNIP(new Date().getFullYear())
-        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
         const newData = {
             nip: generateNip,
             nama: nama,

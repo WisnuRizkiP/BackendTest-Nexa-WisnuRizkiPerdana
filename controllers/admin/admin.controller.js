@@ -1,4 +1,4 @@
-const bcrypt = require('bcrypt')
+const bcrypt = require('bcryptjs')
 const Sequelize = require('sequelize');
 const Op = Sequelize.Op;
 const { admin , admin_token , log_trx_api, } = require("../../models/index")
@@ -113,11 +113,6 @@ const Login = async (req, res) => {
             JSON.stringify(responseValue),
             new Date()
         )
-
-        await admin.create({
-            username: 'barunihh',
-            
-        })
 
         return res.status(responseValue.status).json(responseValue.body)
       
